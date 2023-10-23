@@ -9,4 +9,5 @@ import (
 func SetupRoutes(e *echo.Echo) {
 	e.GET("/meow", handlers.Meow)
 	e.GET("/meow/:count", handlers.Meow)
+	e.GET("/wheels/:wheelsId", handlers.Wheels)
 }
