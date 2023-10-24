@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -8,9 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Wheels(c echo.Context) error {
+func WheelGetById(c echo.Context) error {
 
-	pathParam := c.Param("wheelsId")
+	pathParam := c.Param("wheelId")
 
 	_, err := strconv.Atoi(pathParam)
 	if err != nil {
@@ -29,4 +30,37 @@ func Wheels(c echo.Context) error {
 	}
 
 	return c.File(file)
+}
+
+func WheelsDeleteById(c echo.Context) error {
+
+	pathParam := c.Param("wheelId")
+
+	_, err := strconv.Atoi(pathParam)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Invalid path, please assure that the value is number")
+	}
+
+	if pathParam == "" {
+		return c.String(http.StatusBadRequest, "Invalid path params")
+	}
+
+	file := "Data\\" + pathParam + ".json"
+	currentFile, err := os.Open(file)
+
+	if err != nil {
+		return c.String(http.StatusBadRequest, "There is no wheel with given id")
+	}
+
+	currentFile.Close()
+
+	err = os.Remove(file)
+
+	fmt.Print(err)
+
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Couldn't delete file")
+	}
+
+	return c.String(http.StatusBadRequest, "Wheel deleted properly")
 }
