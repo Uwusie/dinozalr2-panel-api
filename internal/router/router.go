@@ -9,6 +9,6 @@ import (
 func SetupRoutes(e *echo.Echo) {
 	e.GET("/meow", handlers.Meow)
 	e.GET("/meow/:count", handlers.Meow)
-	e.GET("/wheels/:wheelsId", handlers.WheelsGetId)
-	e.DELETE("/wheels/:wheelsId", handlers.WheelsDeleteId)
+	e.GET("/wheels/:wheelId", handlers.WheelGetById)
+	e.DELETE("/wheels/:wheelId", handlers.WheelsDeleteById)
 }

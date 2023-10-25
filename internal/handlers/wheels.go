@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -22,14 +21,15 @@ func WheelGetById(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid path params")
 	}
 
-	file := "Data\\" + pathParam + ".json"
-	_, err = os.Open(file)
+	path := "Data\\" + pathParam + ".json"
+	file, err := os.Open(path)
 
 	if err != nil {
 		return c.String(http.StatusBadRequest, "Couldn't open file")
 	}
+	defer file.Close()
 
-	return c.File(file)
+	return c.File(path)
 }
 
 func WheelsDeleteById(c echo.Context) error {
@@ -55,8 +55,6 @@ func WheelsDeleteById(c echo.Context) error {
 	currentFile.Close()
 
 	err = os.Remove(file)
-
-	fmt.Print(err)
 
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Couldn't delete file")
