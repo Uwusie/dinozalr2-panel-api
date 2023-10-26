@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -61,4 +63,33 @@ func WheelsDeleteById(c echo.Context) error {
 	}
 
 	return c.String(http.StatusBadRequest, "Wheel deleted properly")
+}
+
+func CreateOrUpdateWheel(c echo.Context) error {
+	type Wheel struct {
+		Name    string `json:"name"`
+		Id      int    `json:"id"`
+		Options []struct {
+			Description string  `json:"description"`
+			Chance      float64 `json:"chance"`
+		}
+	}
+
+	var wheel Wheel
+
+	if err := c.Bind(&wheel); err != nil {
+		return c.String(400, "Cound not parse body")
+	}
+	filename := fmt.Sprintf("Data/%d.json", wheel.Id)
+
+	data, err := json.MarshalIndent(wheel, "", "  ")
+	if err != nil {
+		return c.String(500, "Cannot marshal json")
+	}
+
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		return c.String(500, "Cannot save file")
+	}
+
+	return c.String(200, "OK")
 }
