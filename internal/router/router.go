@@ -11,4 +11,5 @@ func SetupRoutes(e *echo.Echo) {
 	e.GET("/meow/:count", handlers.Meow)
 	e.GET("/wheels/:wheelId", handlers.WheelGetById)
 	e.DELETE("/wheels/:wheelId", handlers.WheelsDeleteById)
+	e.PUT("/wheels", handlers.CreateOrUpdateWheel)
 }
