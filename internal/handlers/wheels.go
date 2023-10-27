@@ -1,12 +1,17 @@
 package handlers
 
 import (
-	"encoding/json"
+	"context"
+	"dinozarl2-panel-api/internal/database"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -66,13 +71,16 @@ func WheelsDeleteById(c echo.Context) error {
 }
 
 func CreateOrUpdateWheel(c echo.Context) error {
+	type Sector struct {
+		Label  string
+		Chance float64
+	}
+
 	type Wheel struct {
-		Name    string `json:"name"`
-		Id      int    `json:"id"`
-		Options []struct {
-			Description string  `json:"description"`
-			Chance      float64 `json:"chance"`
-		}
+		WheelId   int
+		Name      string
+		Sectors   []Sector
+		ImagePath string
 	}
 
 	var wheel Wheel
@@ -80,16 +88,31 @@ func CreateOrUpdateWheel(c echo.Context) error {
 	if err := c.Bind(&wheel); err != nil {
 		return c.String(400, "Cound not parse body")
 	}
-	filename := fmt.Sprintf("Data/%d.json", wheel.Id)
 
-	data, err := json.MarshalIndent(wheel, "", "  ")
+	dbClient := database.GetDBClient()
+
+	if wheel.WheelId == 0 {
+		wheel.WheelId = int(uuid.New().ID())
+	}
+	wheel.ImagePath = "path/to/image.png"
+
+	item, err := attributevalue.MarshalMap(wheel)
+
 	if err != nil {
-		return c.String(500, "Cannot marshal json")
+		fmt.Println(err.Error())
+		return c.String(400, "Cannot marshal wheel")
 	}
 
-	if err := os.WriteFile(filename, data, 0644); err != nil {
-		return c.String(500, "Cannot save file")
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String("FortuneWheelsTable"),
+		Item:      item,
 	}
 
+	_, err = dbClient.PutItem(context.TODO(), input)
+	if err != nil {
+		fmt.Println(err.Error())
+		return c.String(500, "Could not add item to the database")
+
+	}
 	return c.String(200, "OK")
 }
