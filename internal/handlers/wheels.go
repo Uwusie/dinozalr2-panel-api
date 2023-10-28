@@ -86,7 +86,7 @@ func CreateOrUpdateWheel(c echo.Context) error {
 	var wheel Wheel
 
 	if err := c.Bind(&wheel); err != nil {
-		return c.String(400, "Cound not parse body")
+		return c.String(400, "Could not parse body")
 	}
 
 	dbClient := database.GetDBClient()

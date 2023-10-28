@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"dinozarl2-panel-api/internal/rabbitmq"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func Meow(c echo.Context) error {
@@ -33,4 +36,39 @@ func Meow(c echo.Context) error {
 	}
 
 	return c.String(http.StatusOK, fmt.Sprintf("%s\n", strings.Repeat("Meow ", meowCount)))
+}
+
+func ConfigureMeow(c echo.Context) error {
+	type MeowConfig struct {
+		Count int `json:"count"`
+	}
+
+	var config MeowConfig
+
+	if err := c.Bind(&config); err != nil {
+		return c.String(400, "Could not parse body")
+	}
+
+	rabbitChannel := rabbitmq.GetChannel()
+
+	jsonBody, err := json.Marshal(config)
+	if err != nil {
+		return c.String(500, "Could not marshal config to JSON")
+	}
+
+	err = rabbitChannel.PublishWithContext(c.Request().Context(),
+		"",     // exchange
+		"meow", // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        jsonBody,
+		})
+
+	if err != nil {
+		return c.String(500, "Could not publish message")
+	}
+
+	return c.String(http.StatusOK, "Message published")
 }
