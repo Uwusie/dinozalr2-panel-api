@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -51,23 +52,21 @@ func WheelsDeleteById(c echo.Context) error {
 	if pathParam == "" {
 		return c.String(http.StatusBadRequest, "Invalid path params")
 	}
-
-	file := "Data\\" + pathParam + ".json"
-	currentFile, err := os.Open(file)
-
-	if err != nil {
-		return c.String(http.StatusBadRequest, "There is no wheel with given id")
+	dbClient := database.GetDBClient()
+	deleteInput := &dynamodb.DeleteItemInput{
+		Key: map[string]types.AttributeValue{
+			"WheelId": &types.AttributeValueMemberN{Value: pathParam},
+		},
+		TableName: aws.String("FortuneWheelsTable"),
 	}
 
-	currentFile.Close()
-
-	err = os.Remove(file)
-
+	_, err = dbClient.DeleteItem(context.TODO(), deleteInput)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Couldn't delete file")
+		return c.String(http.StatusInternalServerError, "Could not delete item from the database")
+
 	}
 
-	return c.String(http.StatusBadRequest, "Wheel deleted properly")
+	return c.String(http.StatusOK, "Wheel deleted properly")
 }
 
 func CreateOrUpdateWheel(c echo.Context) error {
@@ -107,7 +106,6 @@ func CreateOrUpdateWheel(c echo.Context) error {
 		TableName: aws.String("FortuneWheelsTable"),
 		Item:      item,
 	}
-
 	_, err = dbClient.PutItem(context.TODO(), input)
 	if err != nil {
 		fmt.Println(err.Error())
