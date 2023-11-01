@@ -5,7 +5,6 @@ import (
 	"dinozarl2-panel-api/internal/database"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +16,17 @@ import (
 )
 
 func WheelGetById(c echo.Context) error {
+	type Sector struct {
+		Label  string
+		Chance float64
+	}
+
+	type Wheel struct {
+		WheelId   int
+		Name      string
+		Sectors   []Sector
+		ImagePath string
+	}
 
 	pathParam := c.Param("wheelId")
 
@@ -29,15 +39,30 @@ func WheelGetById(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid path params")
 	}
 
-	path := "Data\\" + pathParam + ".json"
-	file, err := os.Open(path)
+	dbClient := database.GetDBClient()
+
+	getItemInput := &dynamodb.GetItemInput{
+		Key: map[string]types.AttributeValue{
+			"WheelId": &types.AttributeValueMemberN{Value: pathParam},
+		},
+		TableName: aws.String("FortuneWheelsTable"),
+	}
+
+	result, err := dbClient.GetItem(context.TODO(), getItemInput)
+	if err != nil {
+		fmt.Println(err.Error())
+		return c.String(http.StatusInternalServerError, "Could not get item from the database")
+	}
+
+	var wheel Wheel
+	err = attributevalue.UnmarshalMap(result.Item, &wheel)
 
 	if err != nil {
-		return c.String(http.StatusBadRequest, "Couldn't open file")
+		fmt.Println(err.Error())
+		return c.String(http.StatusInternalServerError, "Could not unmarshal item from the database")
 	}
-	defer file.Close()
 
-	return c.File(path)
+	return c.JSON(http.StatusOK, wheel)
 }
 
 func WheelsDeleteById(c echo.Context) error {
@@ -62,6 +87,7 @@ func WheelsDeleteById(c echo.Context) error {
 
 	_, err = dbClient.DeleteItem(context.TODO(), deleteInput)
 	if err != nil {
+		fmt.Println(err.Error())
 		return c.String(http.StatusInternalServerError, "Could not delete item from the database")
 
 	}
