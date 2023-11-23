@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# docker-compose.override
+docker-compose.override.yaml
+docker-compose.override.yml
