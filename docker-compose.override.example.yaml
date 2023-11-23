@@ -1,0 +1,5 @@
+services:
+  panel-api:
+    environment:
+      AWS_ACCESS_KEY_ID: PASTE_YOUR_AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: PASTE_YOUR_AWS_SECRET_ACCESS_KEY

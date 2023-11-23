@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -16,7 +17,9 @@ var (
 
 func GetDBClient() *dynamodb.Client {
 	once.Do(func() {
-		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("eu-north-1"))
+		awsRegion := os.Getenv("AWS_REGION")
+
+		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(awsRegion))
 		if err != nil {
 			log.Fatalf("unable to load SDK config, %v", err)
 		}
