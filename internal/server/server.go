@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"dinozarl2-panel-api/internal/database"
 	"dinozarl2-panel-api/internal/rabbitmq"
 	"dinozarl2-panel-api/internal/router"
 	"log"
@@ -14,7 +15,9 @@ import (
 
 func Run() {
 	e := echo.New()
-	router.SetupRoutes(e)
+
+	dynamoDBClient := database.NewDBClient()
+	router.SetupRoutes(e, dynamoDBClient)
 
 	go func() {
 		if err := e.Start(":2137"); err != nil {
