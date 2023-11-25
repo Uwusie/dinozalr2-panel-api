@@ -1,11 +1,30 @@
 services:
+  rabbitmq3:
+    container_name: rabbitmq
+    image: rabbitmq:3.8-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      # AMQP protocol port
+      - '5672:5672'
+      # HTTP management UI
+      - '15672:15672'
+
   panel-api:
     build:
       context: ./
       dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq3
     environment:
       AWS_REGION: eu-north-1
       AWS_ACCESS_KEY_ID: override_this_variable_in_docker_compose_override_yaml
       AWS_SECRET_ACCESS_KEY: override_this_variable_in_docker_compose_override_yaml
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq3
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
     ports:
-      - "2137:2137"
+      - '2137:2137'
