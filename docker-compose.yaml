@@ -7,5 +7,10 @@ services:
       AWS_REGION: eu-north-1
       AWS_ACCESS_KEY_ID: override_this_variable_in_docker_compose_override_yaml
       AWS_SECRET_ACCESS_KEY: override_this_variable_in_docker_compose_override_yaml
+      RABBITMQ_USERNAME: "guest"
+      RABBITMQ_PASSWORD: "guest"
+      RABBITMQ_HOST: "localhost"
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_VHOST: "/"
     ports:
       - "2137:2137"
