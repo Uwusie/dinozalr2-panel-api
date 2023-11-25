@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"dinozarl2-panel-api/internal/database"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -15,7 +14,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func WheelGetById(c echo.Context) error {
+type WheelHandler struct {
+	DBClient *dynamodb.Client
+}
+
+func (h *WheelHandler) WheelGetById(c echo.Context) error {
 	type Sector struct {
 		Label  string
 		Chance float64
@@ -39,8 +42,6 @@ func WheelGetById(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Invalid path params")
 	}
 
-	dbClient := database.GetDBClient()
-
 	getItemInput := &dynamodb.GetItemInput{
 		Key: map[string]types.AttributeValue{
 			"WheelId": &types.AttributeValueMemberN{Value: pathParam},
@@ -48,7 +49,7 @@ func WheelGetById(c echo.Context) error {
 		TableName: aws.String("FortuneWheelsTable"),
 	}
 
-	result, err := dbClient.GetItem(context.TODO(), getItemInput)
+	result, err := h.DBClient.GetItem(context.TODO(), getItemInput)
 	if err != nil {
 		fmt.Println(err.Error())
 		return c.String(http.StatusInternalServerError, "Could not get item from the database")
@@ -65,7 +66,7 @@ func WheelGetById(c echo.Context) error {
 	return c.JSON(http.StatusOK, wheel)
 }
 
-func WheelsDeleteById(c echo.Context) error {
+func (h *WheelHandler) WheelsDeleteById(c echo.Context) error {
 
 	pathParam := c.Param("wheelId")
 
@@ -77,7 +78,6 @@ func WheelsDeleteById(c echo.Context) error {
 	if pathParam == "" {
 		return c.String(http.StatusBadRequest, "Invalid path params")
 	}
-	dbClient := database.GetDBClient()
 	deleteInput := &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
 			"WheelId": &types.AttributeValueMemberN{Value: pathParam},
@@ -85,7 +85,7 @@ func WheelsDeleteById(c echo.Context) error {
 		TableName: aws.String("FortuneWheelsTable"),
 	}
 
-	_, err = dbClient.DeleteItem(context.TODO(), deleteInput)
+	_, err = h.DBClient.DeleteItem(context.TODO(), deleteInput)
 	if err != nil {
 		fmt.Println(err.Error())
 		return c.String(http.StatusInternalServerError, "Could not delete item from the database")
@@ -95,7 +95,7 @@ func WheelsDeleteById(c echo.Context) error {
 	return c.String(http.StatusOK, "Wheel deleted properly")
 }
 
-func CreateOrUpdateWheel(c echo.Context) error {
+func (h *WheelHandler) CreateOrUpdateWheel(c echo.Context) error {
 	type Sector struct {
 		Label  string
 		Chance float64
@@ -114,8 +114,6 @@ func CreateOrUpdateWheel(c echo.Context) error {
 		return c.String(400, "Could not parse body")
 	}
 
-	dbClient := database.GetDBClient()
-
 	if wheel.WheelId == 0 {
 		wheel.WheelId = int(uuid.New().ID())
 	}
@@ -132,7 +130,7 @@ func CreateOrUpdateWheel(c echo.Context) error {
 		TableName: aws.String("FortuneWheelsTable"),
 		Item:      item,
 	}
-	_, err = dbClient.PutItem(context.TODO(), input)
+	_, err = h.DBClient.PutItem(context.TODO(), input)
 	if err != nil {
 		fmt.Println(err.Error())
 		return c.String(500, "Could not add item to the database")
