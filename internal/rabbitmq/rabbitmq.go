@@ -45,7 +45,7 @@ func GetChannel() *amqp.Channel {
 func createQueue(ch *amqp.Channel) *amqp.Queue {
 	queue, err := ch.QueueDeclare(
 		"meow",
-		false,
+		true,
 		false,
 		false,
 		false,
