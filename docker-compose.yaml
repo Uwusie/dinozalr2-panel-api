@@ -31,7 +31,8 @@ services:
 
   dinozalr2-bot:
     build:
-      context: ../dinozalr2-bot
+      context: https://github.com/Uwusie/dinozalr2-bot.git
+      # context: ../dinozalr2-bot #uncomment if you want to use local dinozalr2-bot
       dockerfile: Dockerfile
     depends_on:
       - rabbitmq3
