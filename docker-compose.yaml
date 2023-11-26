@@ -28,3 +28,19 @@ services:
       RABBITMQ_VHOST: /
     ports:
       - '2137:2137'
+
+  dinozalr2-bot:
+    build:
+      context: ../dinozalr2-bot
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq3
+    environment:
+      DISCORD_BOT_TOKEN: override_this_variable_in_docker_compose_override_yaml
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq3
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+    ports:
+      - '2138:80'
